@@ -11,17 +11,39 @@ async function index(req, res) {
   }
 }
 
+async function show(req, res) {
+  try {
+    const profile = await Profile.findById(req.params.id)
+    res.json(profile)
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(err)
+  }
+}
+
+async function update(req, res) {
+  try {
+    const profile = await Profile.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    })
+    res.json(profile)
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(err)
+  }
+}
+
 async function addPhoto(req, res) {
   try {
     const imageFile = req.files.photo.path
     const profile = await Profile.findById(req.params.id)
 
     const image = await cloudinary.uploader.upload(
-      imageFile, 
+      imageFile,
       { tags: `${req.user.email}` }
     )
     profile.photo = image.url
-    
+
     await profile.save()
     res.status(201).json(profile.photo)
   } catch (err) {
@@ -30,4 +52,9 @@ async function addPhoto(req, res) {
   }
 }
 
-export { index, addPhoto }
+export {
+  index,
+  addPhoto,
+  show,
+  update,
+}
