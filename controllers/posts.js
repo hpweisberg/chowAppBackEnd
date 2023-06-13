@@ -1,5 +1,6 @@
 import { Post } from '../models/post.js'
 import { v2 as cloudinary } from 'cloudinary'
+import { Profile } from '../models/profile.js'
 
 async function index(req, res) {
   try {
@@ -13,7 +14,14 @@ async function index(req, res) {
 
 async function create(req, res) {
   try {
+    req.body.author = req.user.profile
     const post = await Post.create(req.body)
+    const profile = await Profile.findByIdAndUpdate(
+      req.user.profile,
+      { $push: { posts: post } },
+      { new: true }
+    )
+    profile.author = profile
     res.status(201).json(post)
   } catch (err) {
     console.log(err)

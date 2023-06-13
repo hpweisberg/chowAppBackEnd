@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+// import { Restaurant } from './restaurant'
 
 const Schema = mongoose.Schema
 
@@ -15,6 +16,10 @@ const profileSchema = new Schema({
   posts: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post'
+  }],
+  restaurants: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant'
   }]
 },{
   timestamps: true,

@@ -7,12 +7,17 @@ const postSchema = new Schema({
   photo: String,
   meal: String,
   review: String,
-  picture: String,
   title: String,
-  raiting: Number,
-  discription: String,
-  Location: String,
-},{
+  rating: Number,
+  description: String,
+  author: { 
+    type: Schema.Types.ObjectId, 
+    ref: 'Profile' 
+  },
+  resturant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post'
+  }},{
   timestamps: true,
 })
 
