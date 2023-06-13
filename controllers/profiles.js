@@ -1,5 +1,6 @@
 import { Profile } from '../models/profile.js'
 import { v2 as cloudinary } from 'cloudinary'
+import { Post } from '../models/post.js'
 
 async function index(req, res) {
   try {
@@ -14,7 +15,9 @@ async function index(req, res) {
 async function show(req, res) {
   try {
     const profile = await Profile.findById(req.params.id)
-    res.json(profile)
+      .populate('posts')
+      .sort({ createdAt: 'desc' })
+    res.status(200).json(profile)
   } catch (err) {
     console.log(err)
     res.status(500).json(err)
@@ -23,9 +26,10 @@ async function show(req, res) {
 
 async function update(req, res) {
   try {
-    const profile = await Profile.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    })
+    const profile = await Profile.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true })
     res.json(profile)
   } catch (err) {
     console.log(err)

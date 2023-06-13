@@ -32,7 +32,9 @@ async function create(req, res) {
 async function show(req, res) {
   try {
     const post = await Post.findById(req.params.id)
-    res.json(post)
+      .populate('author')
+      .sort({ createdAt: 'desc' })
+    res.status(200).json(post)
   } catch (err) {
     console.log(err)
     res.status(500).json(err)
@@ -42,7 +44,7 @@ async function show(req, res) {
 async function update(req, res) {
   try {
     const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true })
-    res.json(post)
+    res.status(200).json(post)
   } catch (err) {
     console.log(err)
     res.status(500).json(err)
@@ -52,7 +54,7 @@ async function update(req, res) {
 async function deletePost(req, res) {
   try {
     const post = await Post.findByIdAndDelete(req.params.id)
-    res.json(post)
+    res.status(200).json(post)
   } catch (err) {
     console.log(err)
     res.status(500).json(err)
@@ -65,11 +67,11 @@ async function addPhoto(req, res) {
     const post = await Post.findById(req.params.id)
 
     const image = await cloudinary.uploader.upload(
-      imageFile, 
-      { tags: `${req.user.email}` }
+      imageFile,
+      { tags: `${req.post._id}` }
     )
     post.photo = image.url
-    
+
     await post.save()
     res.status(201).json(post.photo)
   } catch (err) {
@@ -78,7 +80,7 @@ async function addPhoto(req, res) {
   }
 }
 
-export { 
+export {
   index,
   addPhoto,
   create,
