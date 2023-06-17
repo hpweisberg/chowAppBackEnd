@@ -63,15 +63,20 @@ async function deletePost(req, res) {
 
 async function addPhoto(req, res) {
   try {
+    console.log('Add Photo Ran')
+    console.log('req.files: ',req.files)
     const imageFile = req.files.photo.path
+    console.log('imageFile: ',imageFile)
     const post = await Post.findById(req.params.id)
+    console.log('post: ',post)
 
     const image = await cloudinary.uploader.upload(
       imageFile,
-      { tags: `${req.post._id}` }
+      { tags: `${post._id}` }
     )
+    console.log('image: ',image)
     post.photo = image.url
-
+console.log('post.photo: ',post.photo)
     await post.save()
     res.status(201).json(post.photo)
   } catch (err) {

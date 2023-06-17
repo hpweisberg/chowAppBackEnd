@@ -15,6 +15,7 @@ router.get('/', checkAuth, postsCtrl.index)
 router.get('/:id', checkAuth, postsCtrl.show)
 router.put('/:id', checkAuth, postsCtrl.update)
 router.delete('/:id', checkAuth, postsCtrl.deletePost)
+router.put('/:id/add-photo', checkAuth, postsCtrl.addPhoto)
 // router.post('/change-password', checkAuth, authCtrl.changePassword)
 
 export { router }
