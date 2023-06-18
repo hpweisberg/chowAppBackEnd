@@ -5,6 +5,7 @@ import logger from 'morgan'
 import cors from 'cors'
 import formData from 'express-form-data'
 
+
 // connect to MongoDB with mongoose
 import './config/database.js'
 
@@ -12,6 +13,7 @@ import './config/database.js'
 import { router as profilesRouter } from './routes/profiles.js'
 import { router as authRouter } from './routes/auth.js'
 import { router as postsRouter } from './routes/posts.js'
+import { Client } from '@googlemaps/google-maps-services-js'
 
 // create the express app
 const app = express()
@@ -36,5 +38,6 @@ app.use(function (req, res, next) {
 app.use(function (err, req, res, next) {
   res.status(err.status || 500).json({ err: err.message })
 })
+
 
 export { app }
