@@ -6,12 +6,12 @@ const Schema = mongoose.Schema
 const profileSchema = new Schema({
   name: String,
   photo: String,
-  friends: [String],
-  friendRequests: [String],
+  friends: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
+  friendRequests: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
   bio: String,
-  followers: [String],
-  following: [String],
-  blocked: [String],
+  followers: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
+  following: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
+  blocked: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
   verified: Boolean,
   posts: [{
     type: mongoose.Schema.Types.ObjectId,

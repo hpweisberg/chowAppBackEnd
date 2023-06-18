@@ -1,7 +1,7 @@
 import { Profile } from '../models/profile.js'
 import { v2 as cloudinary } from 'cloudinary'
 import { Post } from '../models/post.js'
-import * as res from 'express/lib/response'
+// import * as res from 'express/lib/response'
 
 async function index(req, res) {
   try {
@@ -59,7 +59,7 @@ async function addPhoto(req, res) {
 
 const friendRequests = async (req, res) => {
   try {
-    const userProfile = await Profile.findById(req.params.id).populate('friendRequests')
+    const userProfile = await Profile.findById(req.user.profile).populate('friendRequests')
     const friendRequests = userProfile.friendRequests
     res.status(200).json(friendRequests)
   } catch (error) {
@@ -76,7 +76,7 @@ const sendFriendRequest = async (req, res) => {
     } else if (friendProfile.friendRequests.includes(userProfile._id)) {
       res.status(401).json({ message: 'You have already sent a friend request' })
     } else {
-      friendProfile.friendRequests.push(userProfile._id)
+      friendProfile.friendRequests.push(userProfile)
       await friendProfile.save()
       res.status(200).json(friendProfile)
     }
@@ -87,12 +87,15 @@ const sendFriendRequest = async (req, res) => {
 
 const acceptFriendRequest = async (req, res) => {
   try {
-    const userProfile = await Profile.findById(req.user.profile)
-    const friendProfile = await Profile.findById(req.params.id)
+    const userProfile = await Profile.findByIdAndUpdate(req.user.profile,
+      { $push: { friends: req.params.id } },
+      { new: true })
+    const friendProfile = await Profile.findByIdAndUpdate(req.params.id,
+      { $push: { friends: req.user.profile } },
+      { new: true })
     if (!friendProfile.friendRequests.includes(userProfile._id)) {
       res.status(401).json({ message: 'You have not sent a friend request' })
     } else {
-      friendProfile.friends.push(userProfile._id)
       friendProfile.friendRequests.pull(userProfile._id)
       await friendProfile.save()
       userProfile.friends.push(friendProfile._id)
@@ -107,14 +110,9 @@ const acceptFriendRequest = async (req, res) => {
 const rejectFriendRequest = async (req, res) => {
   try {
     const userProfile = await Profile.findById(req.user.profile)
-    const friendProfile = await Profile.findById(req.params.id)
-    if (!friendProfile.friendRequests.includes(userProfile._id)) {
-      res.status(401).json({ message: 'You have not sent a friend request' })
-    } else {
-      friendProfile.friendRequests.pull(userProfile._id)
-      await friendProfile.save()
-      res.status(200).json(friendProfile)
-    }
+    userProfile.friendRequests.remove({ _id: req.params.id })
+    await userProfile.save()
+    res.status(200).json(userProfile)
   } catch (error) {
     res.status(500).json(error)
   }
@@ -122,16 +120,14 @@ const rejectFriendRequest = async (req, res) => {
 
 const unfriend = async (req, res) => {
   try {
-    const userProfile = await Profile.findById(req.user.profile)
-    const friendProfile = await Profile.findById(req.params.id)
+    const userProfile = await Profile.findByIdAndUpdate(req.user.profile,
+      { $pull: { friends: req.params.id } },
+      { new: true })
+    const friendProfile = await Profile.findByIdAndUpdate(req.params.id,
+      { $pull: { friends: req.user.profile } },
+      { new: true })
     if (!friendProfile.friends.includes(userProfile._id)) {
-      res.status(401).json({ message: 'You are not friends with this user' })
-    } else {
-      friendProfile.friends.pull(userProfile._id)
-      await friendProfile.save()
-      userProfile.friends.pull(friendProfile._id)
-      await userProfile.save()
-      res.status(200).json(friendProfile)
+      res.status(401).json({ message: 'You are not friends' })
     }
   } catch (error) {
     res.status(500).json(error)
@@ -140,7 +136,8 @@ const unfriend = async (req, res) => {
 
 const friendList = async (req, res) => {
   try {
-    const userProfile = await Profile.findById(req.user.profile)
+    const userProfile = await Profile.findById(req.user.profile).populate('friends')
+    .sort({ createdAt: 'desc' })
     const friendList = userProfile.friends
     res.status(200).json(friendList)
   } catch (error) {

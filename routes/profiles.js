@@ -15,9 +15,9 @@ router.get('/requests', checkAuth, profilesCtrl.friendRequests)
 router.get('/:id', checkAuth, profilesCtrl.show)
 router.put('/:id', checkAuth, profilesCtrl.update)
 router.put('/:id/add-photo', checkAuth, profilesCtrl.addPhoto)
-router.patch('/:id/acceptFriendRequest', checkAuth, profilesCtrl.acceptFriendRequest)
-router.patch('/:id/rejectFriendRequest', checkAuth, profilesCtrl.rejectFriendRequest)
+router.patch('/:id/send-friend-request', checkAuth, profilesCtrl.sendFriendRequest)
+router.patch('/:id/accept-friend-request', checkAuth, profilesCtrl.acceptFriendRequest)
+router.patch('/:id/reject-friend-request', checkAuth, profilesCtrl.rejectFriendRequest)
 router.patch('/:id/unfriend', checkAuth, profilesCtrl.unfriend)
-router.patch('/:id/sendFriendRequest', checkAuth, profilesCtrl.sendFriendRequest)
 
 export { router }
