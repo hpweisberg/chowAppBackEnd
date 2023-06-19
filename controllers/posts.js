@@ -11,6 +11,22 @@ async function index(req, res) {
     res.status(500).json(err)
   }
 }
+// req.user.profile
+
+async function indexByFriends(req, res) {
+  try {
+    const user = await Profile.findById(req.user.profile).populate('friends');
+    const friendIds = user.friends.map(friend => friend._id);
+
+    const posts = await Post.find({ author: { $in: friendIds } });
+
+    res.json(posts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
+  }
+}
+
 
 async function create(req, res) {
   try {
@@ -91,5 +107,6 @@ export {
   create,
   show,
   update,
-  deletePost
+  deletePost,
+  indexByFriends
 }
