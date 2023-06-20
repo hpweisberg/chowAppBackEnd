@@ -11,7 +11,9 @@ async function signup(req, res) {
     }
 
     const user = await User.findOne({ email: req.body.email })
+    const handle = await User.findOne({ handle: req.body.handle })
     if (user) throw new Error('Account already exists')
+    if (handle) throw new Error('Handle name is taken, please choose another')
 
     const newProfile = await Profile.create(req.body)
     req.body.profile = newProfile._id
