@@ -74,6 +74,21 @@ async function changePassword(req, res) {
   }
 }
 
+async function update(req, res) {
+  try {
+    const user = await User.findById(req.user._id)
+    if (!user) throw new Error('User not found')
+
+    // user.email = req.body.email
+    user.handle = req.body.handle
+    await user.save()
+
+    res.json({ user })
+  } catch (err) {
+    handleAuthError(err, res)
+  }
+}
+
 /* --== Helper Functions ==-- */
 
 function handleAuthError(err, res) {
@@ -90,4 +105,4 @@ function createJWT(user) {
   return jwt.sign({ user }, process.env.SECRET, { expiresIn: '24h' })
 }
 
-export { signup, login, changePassword }
+export { signup, login, changePassword, update }

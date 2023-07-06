@@ -7,12 +7,15 @@ const profileSchema = new Schema({
   name: String,
   photo: String,
   handle: String,
-  friends: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
-  friendRequests: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
+  friends: [{
+    type: String,
+    ref: 'Profile'
+  }],
+  friendRequests: [String],
   bio: String,
-  followers: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
-  following: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
-  blocked: [{type: Schema.Types.ObjectId, ref: 'Profile'}],
+  followers: [String],
+  following: [String],
+  blocked: [String],
   verified: Boolean,
   posts: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -22,7 +25,7 @@ const profileSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant'
   }]
-},{
+}, {
   timestamps: true,
 })
 

@@ -12,14 +12,63 @@ async function index(req, res) {
   }
 }
 // req.user.profile
+// ! not using
+// async function indexByFriends(req, res) {
+//   try {
+//     const userProfile = await Profile.findOne({ handle: req.user.handle }).populate('friends');
+//     console.log('friends handles:', userProfile.friends);
+
+//     const friendHandles = userProfile.friends.map(friend => friend.handle);
+//     console.log('friend handles:', friendHandles);
+
+//     const posts = await Post.find({ author: { $in: friendHandles } })
+//       .sort({ createdAt: -1 }) // Sort posts by createdAt field in descending order (newest first)
+//       .populate({
+//         path: 'author',
+//         select: '-_id -__v' // Exclude _id and __v fields from the populated author's profile
+//       });
+
+//     res.json(posts);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json(err);
+//   }
+// }
 
 async function indexByFriends(req, res) {
+  const { handle } = req.user;
+  // console.log('handle:', handle);
   try {
-    const user = await Profile.findById(req.user.profile).populate('friends');
-    const friendIds = user.friends.map(friend => friend._id);
+    const userProfile = await Profile.findOne({ handle });
+    // console.log('userProfile:', userProfile); // Log the userProfile object
 
-    const posts = await Post.find({ author: { $in: friendIds } });
+    if (!userProfile) {
+      return res.status(404).json({ message: 'User profile not found' });
+    }
 
+    // console.log('friends handles:', userProfile.friends);
+
+    const friendHandles = userProfile.friends.map(friend => friend);
+
+    if (friendHandles.length === 0) {
+      return res.status(404).json({ message: 'No friends yet' });
+    }
+    
+    const posts = await Post.find({ author: { $in: friendHandles } })
+      .sort({ createdAt: -1 })
+
+      // console.log('posts:', posts);
+
+    // const posts = await Post.find({ author: { $in: friendHandles } })
+    //   .sort({ createdAt: -1 })
+    //   .populate({
+    //     path: 'author',
+    //     select: '-_id -__v'
+    //   });
+
+      // console.log('friendHandles:', friendHandles);
+
+    // console.log('posts:', posts);
     res.json(posts);
   } catch (err) {
     console.error(err);
@@ -28,34 +77,71 @@ async function indexByFriends(req, res) {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 async function create(req, res) {
   try {
-    req.body.author = req.user.profile
-    const post = await Post.create(req.body)
-    const profile = await Profile.findByIdAndUpdate(
-      req.user.profile,
-      { $push: { posts: post } },
+    const authorProfile = await Profile.findOne({ handle: req.user.handle });
+    req.body.author = authorProfile.handle;
+
+    const post = await Post.create(req.body);
+
+    const updatedProfile = await Profile.findByIdAndUpdate(
+      authorProfile._id,
+      { $push: { posts: post._id } },
       { new: true }
-    )
-    profile.author = profile
-    res.status(201).json(post)
+    );
+
+    post.author = updatedProfile.handle; // Set the author to the handle of the updated profile
+
+    res.status(201).json(post);
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    console.log(err);
+    res.status(500).json(err);
   }
 }
 
+
+
+
+
 async function show(req, res) {
   try {
-    const post = await Post.findById(req.params.id)
-      .populate('author')
-      .sort({ createdAt: 'desc' })
-    res.status(200).json(post)
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    const author = await Profile.findOne({ handle: post.author });
+    
+    if (!author) {
+      return res.status(404).json({ message: 'Author not found' });
+    }
+    
+    post.author = author;
+    
+    res.status(200).json(post);
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    console.log(err);
+    res.status(500).json(err);
   }
 }
+
+
 
 async function update(req, res) {
   try {
@@ -92,7 +178,7 @@ async function addPhoto(req, res) {
     )
     // console.log('image: ',image)
     post.photo = image.url
-// console.log('post.photo: ',post.photo)
+    // console.log('post.photo: ',post.photo)
     await post.save()
     res.status(201).json(post.photo)
   } catch (err) {

@@ -11,10 +11,11 @@ const postSchema = new Schema({
   rating: Number,
   description: String,
   author: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Profile' 
+    type: String, 
+    ref: 'Profile',
+    field: 'handle' 
   },
-  resturant: {
+  restaurant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post'
   }},{
