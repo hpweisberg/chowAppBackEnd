@@ -37,46 +37,45 @@ async function index(req, res) {
 
 async function indexByFriends(req, res) {
   const { handle } = req.user;
-  // console.log('handle:', handle);
   try {
     const userProfile = await Profile.findOne({ handle });
-    // console.log('userProfile:', userProfile); // Log the userProfile object
 
     if (!userProfile) {
       return res.status(404).json({ message: 'User profile not found' });
     }
 
-    // console.log('friends handles:', userProfile.friends);
-
-    const friendHandles = userProfile.friends.map(friend => friend);
+    const friendHandles = userProfile.friends.map((friend) => friend);
 
     if (friendHandles.length === 0) {
       return res.status(404).json({ message: 'No friends yet' });
     }
-    
+
     const posts = await Post.find({ author: { $in: friendHandles } })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1 });
 
-      // console.log('posts:', posts);
+    const populatedPosts = await Promise.all(
+      posts.map(async (post) => {
+        const author = await Profile.findOne({ handle: post.author });
 
-    // const posts = await Post.find({ author: { $in: friendHandles } })
-    //   .sort({ createdAt: -1 })
-    //   .populate({
-    //     path: 'author',
-    //     select: '-_id -__v'
-    //   });
+        if (!author) {
+          return null;
+        }
 
-      // console.log('friendHandles:', friendHandles);
+        return {
+          ...post.toObject(),
+          author: author.toObject(),
+        };
+      })
+    );
 
-    // console.log('posts:', posts);
-    res.json(posts);
+    const filteredPosts = populatedPosts.filter((post) => post !== null);
+
+    res.json(filteredPosts);
   } catch (err) {
     console.error(err);
     res.status(500).json(err);
   }
 }
-
-
 
 
 
@@ -187,6 +186,18 @@ async function addPhoto(req, res) {
   }
 }
 
+// async function addRestaurant(req, res) {
+//   try {
+//     const post = await Post.findById(req.params.id)
+//     post.restaurant = req.body.restaurant
+//     await post.save()
+//     res.status(201).json(post.restaurant)
+//   } catch (err) {
+//     console.log(err)
+//     res.status(500).json(err)
+//   }
+// }
+
 export {
   index,
   addPhoto,
@@ -194,5 +205,6 @@ export {
   show,
   update,
   deletePost,
-  indexByFriends
+  indexByFriends,
+  // addRestaurant
 }

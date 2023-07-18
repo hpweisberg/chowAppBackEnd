@@ -1,6 +1,7 @@
 import { Profile } from '../models/profile.js'
 import { v2 as cloudinary } from 'cloudinary'
 import { Post } from '../models/post.js'
+import { User } from '../models/user.js'
 import * as mongoose from 'mongoose'
 // import * as res from 'express/lib/response'
 
@@ -28,12 +29,21 @@ const show = async (req, res) => {
 
 
 async function update(req, res) {
-  const { handle } = req.params;
+  const { handle } = req.user;
 
   try {
+    let updatedData = req.body;
+
+    // Update the user model if the requested key-value pair is present
+    if (updatedData.name) {
+      const user = await User.findOne({ handle });
+      user.name = updatedData.name;
+      await user.save();
+    }
+
     const profile = await Profile.findOneAndUpdate(
-      { handle }, // Updated query to match handle
-      req.body,
+      { handle },
+      updatedData,
       { new: true }
     );
     res.json(profile);
@@ -42,6 +52,7 @@ async function update(req, res) {
     res.status(500).json(err);
   }
 }
+
 
 
 async function addPhoto(req, res) {
@@ -218,7 +229,51 @@ async function unfriend(req, res) {
   }
 }
 
+async function follow(req, res) {
+  try {
+    const userProfile = await Profile.findOne({ handle: req.user.handle });
+    const followProfile = await Profile.findOne({ handle: req.params.handle });
 
+    if (!userProfile.followers.includes(followProfile.handle)) {
+      userProfile.followers.push(followProfile.handle);
+      await userProfile.save();
+    }
+
+    if (!followProfile.followedBy.includes(userProfile.handle)) {
+      followProfile.followedBy.push(userProfile.handle);
+      await followProfile.save();
+    }
+
+    res.status(200).json({ message: 'Successfully followed' });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+}
+
+async function unfollow(req, res) {
+  try {
+    const userProfile = await Profile.findOne({ handle: req.user.handle });
+    const followProfile = await Profile.findOne({ handle: req.params.handle });
+
+    if (userProfile.followers.includes(followProfile.handle)) {
+      userProfile.followers = userProfile.followers.filter(
+        (follower) => follower !== followProfile.handle
+      );
+      await userProfile.save();
+    }
+
+    if (followProfile.followedBy.includes(userProfile.handle)) {
+      followProfile.followedBy = followProfile.followedBy.filter(
+        (followed) => followed !== userProfile.handle
+      );
+      await followProfile.save();
+    }
+
+    res.status(200).json({ message: 'Successfully unfollowed' });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+}
 
 
 
@@ -233,5 +288,7 @@ export {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
-  unfriend
+  unfriend,
+  follow,
+  unfollow
 }

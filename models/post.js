@@ -16,8 +16,10 @@ const postSchema = new Schema({
     field: 'handle' 
   },
   restaurant: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Post'
+    placeId: String,
+    restaurantName: String,
+    lat: Number,
+    lng: Number,
   }},{
   timestamps: true,
 })
