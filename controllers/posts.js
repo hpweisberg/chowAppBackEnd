@@ -173,8 +173,8 @@ async function addPhoto(req, res) {
         tags: `${post._id}`,
         transformation: [
           {
-            width: 126.66,
-            height: 128,
+            width: 600,
+            height: 600,
             crop: 'fill',
             gravity: 'center',
           },
