@@ -76,7 +76,6 @@ async function addPhoto(req, res) {
 
 async function friendList(req, res) {
   const { handle } = req.user;
-  console.log('handle:', handle);
 
   try {
     const profile = await Profile.findOne({ handle });
@@ -112,13 +111,21 @@ async function friendList(req, res) {
 
 
 async function friendRequests(req, res) {
+  // I need to get the profile photo, name and handle of the user who sent the friend request
+  
+  const { handle } = req.user;
+
   try {
-    const userProfile = await Profile.findById(req.user.profile).populate('friendRequests')
-    if (userProfile.friendRequests.length === 0) {
-      return res.status(404).json({ message: 'No friend requests' })
+    const profile = await Profile.findOne({ handle });
+    if (!profile || !profile.friendRequests || profile.friendRequests.length === 0) {
+      return res.status(404).json({ message: 'No friend requests' });
     }
-    res.status(200).json(userProfile.friendRequests)
-  } catch (error) {
+
+    const requestHandles = profile.friendRequests;
+    const requestProfiles = await Profile.find({ handle: { $in: requestHandles } });
+
+    res.status(200).json(requestProfiles);
+  } catch {
     res.status(500).json(error)
   }
 }
