@@ -6,6 +6,8 @@ const router = Router()
 
 /*---------- Public Routes ----------*/
 router.post('/signup', authCtrl.signup)
+router.get('/is-email-unique', authCtrl.isEmailUnique)
+router.get('/is-handle-unique', authCtrl.isHandleUnique)
 router.post('/login', authCtrl.login)
 
 /*---------- Protected Routes ----------*/
