@@ -416,6 +416,7 @@ async function rejectFollowRequest(req, res) {
   }
 }
 
+
 export {
   index,
   show,
