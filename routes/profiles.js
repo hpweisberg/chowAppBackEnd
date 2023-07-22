@@ -24,6 +24,8 @@ router.patch('/:handle/reject-friend-request', checkAuth, profilesCtrl.rejectFri
 router.patch('/:handle/unfriend', checkAuth, profilesCtrl.unfriend)
 router.patch('/:handle/follow', checkAuth, profilesCtrl.follow)
 router.patch('/:handle/unfollow', checkAuth, profilesCtrl.unfollow)
+router.patch('/:handle/accept-follow-request', checkAuth, profilesCtrl.acceptFollowRequest)
+router.patch('/:handle/reject-follow-request', checkAuth, profilesCtrl.rejectFollowRequest)
 
 /*---------- Admin Routes ----------*/
 

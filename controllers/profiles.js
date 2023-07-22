@@ -279,6 +279,16 @@ async function unfollow(req, res) {
     const userProfile = await Profile.findOne({ handle: req.user.handle });
     const otherProfile = await Profile.findOne({ handle: req.params.handle });
 
+    if (!userProfile || !otherProfile) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+    if (userProfile.equals(otherProfile)) {
+      return res.status(401).json({ message: 'You cannot unfollow yourself' });
+    }
+    if (!userProfile.following.includes(otherProfile.handle)) {
+      return res.status(401).json({ message: 'You are not following this person' });
+    }
+
     if (userProfile.following.includes(otherProfile.handle)) {
       userProfile.following = userProfile.following.filter(
         (follow) => follow !== otherProfile.handle
@@ -349,6 +359,62 @@ async function followRequests(req, res) {
   }
 }
 
+async function acceptFollowRequest(req, res) {
+  const { handle } = req.user;
+  try {
+    const userProfile = await Profile.findOne({ handle: req.user.handle });
+    const otherProfile = await Profile.findOne({ handle: req.params.handle });
+    if (!userProfile || !otherProfile) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+
+    if (userProfile.equals(otherProfile)) {
+      return res.status(401).json({ message: 'You cannot send a follow request to yourself' });
+    }
+
+    if (otherProfile.followers.some(request => request.handle === userProfile.handle)) {
+      return res.status(401).json({ message: 'You have already sent a follow request' });
+    }
+
+    otherProfile.following.push(userProfile.handle);
+    // otherProfile.followRequests.pull(userProfile.handle);
+    await otherProfile.save();
+
+    userProfile.followers.push(otherProfile.handle);
+    userProfile.followRequests.pull(otherProfile.handle);
+    await userProfile.save();
+
+    res.status(200).json(otherProfile);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+}
+
+async function rejectFollowRequest(req, res) {
+  const { handle } = req.user;
+  try {
+    const userProfile = await Profile.findOne({ handle: req.user.handle });
+    const otherProfile = await Profile.findOne({ handle: req.params.handle });
+    if (!userProfile || !otherProfile) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+
+    if (userProfile.equals(otherProfile)) {
+      return res.status(401).json({ message: 'You cannot send a follow request to yourself' });
+    }
+
+    if (!userProfile.followRequests.includes(otherProfile.handle)) {
+      return res.status(401).json({ message: 'You have not recieved a follow request from this person' });
+    }
+
+    userProfile.followRequests.pull(otherProfile.handle);
+    await userProfile.save();
+
+    res.status(200).json(userProfile);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+}
 
 export {
   index,
@@ -365,5 +431,7 @@ export {
   unfollow,
   followersList,
   followingList,
-  followRequests
+  followRequests,
+  acceptFollowRequest,
+  rejectFollowRequest
 }
