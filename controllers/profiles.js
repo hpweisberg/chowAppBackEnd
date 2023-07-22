@@ -112,7 +112,7 @@ async function friendList(req, res) {
 
 async function friendRequests(req, res) {
   // I need to get the profile photo, name and handle of the user who sent the friend request
-  
+
   const { handle } = req.user;
 
   try {
@@ -238,42 +238,59 @@ async function unfriend(req, res) {
 
 async function follow(req, res) {
   try {
+  const friendProfile = await Profile.findOne({ handle: req.params.handle });
     const userProfile = await Profile.findOne({ handle: req.user.handle });
-    const followProfile = await Profile.findOne({ handle: req.params.handle });
 
-    if (!userProfile.followers.includes(followProfile.handle)) {
-      userProfile.followers.push(followProfile.handle);
+    if (!friendProfile || !userProfile) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+
+    if (friendProfile.equals(userProfile)) {
+      return res.status(401).json({ message: 'You cannot send a follow request to yourself' });
+    }
+
+    if (friendProfile.followRequests.some(request => request.handle === userProfile.handle)) {
+      return res.status(401).json({ message: 'You have already sent a follow request' });
+    }
+    
+    if (friendProfile.followPublic === false) {
+      friendProfile.followRequests.push(userProfile.handle);
+      await friendProfile.save();
+    } 
+
+    if (friendProfile.followPublic === true) {
+      userProfile.following.push(friendProfile.handle);
       await userProfile.save();
+      friendProfile.followers.push(userProfile.handle);
+      await friendProfile.save();
     }
 
-    if (!followProfile.followedBy.includes(userProfile.handle)) {
-      followProfile.followedBy.push(userProfile.handle);
-      await followProfile.save();
-    }
-
-    res.status(200).json({ message: 'Successfully followed' });
+    // friendProfile.friendRequests.push(userProfile.handle);
+    await friendProfile.save();
+    res.status(200).json(friendProfile);
   } catch (error) {
-    res.status(500).json(error);
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
 async function unfollow(req, res) {
   try {
     const userProfile = await Profile.findOne({ handle: req.user.handle });
-    const followProfile = await Profile.findOne({ handle: req.params.handle });
+    const otherProfile = await Profile.findOne({ handle: req.params.handle });
 
-    if (userProfile.followers.includes(followProfile.handle)) {
-      userProfile.followers = userProfile.followers.filter(
-        (follower) => follower !== followProfile.handle
+    if (userProfile.following.includes(otherProfile.handle)) {
+      userProfile.following = userProfile.following.filter(
+        (follow) => follow !== otherProfile.handle
       );
       await userProfile.save();
     }
 
-    if (followProfile.followedBy.includes(userProfile.handle)) {
-      followProfile.followedBy = followProfile.followedBy.filter(
+    if (otherProfile.followers.includes(userProfile.handle)) {
+      otherProfile.followers = otherProfile.followers.filter(
         (followed) => followed !== userProfile.handle
       );
-      await followProfile.save();
+      await otherProfile.save();
     }
 
     res.status(200).json({ message: 'Successfully unfollowed' });
@@ -282,7 +299,55 @@ async function unfollow(req, res) {
   }
 }
 
+async function followersList(req, res) {
+  const { handle } = req.user;
 
+  try {
+    const profile = await Profile.findOne({ handle });
+    if (!profile || !profile.followers || profile.followers.length === 0) {
+      return res.status(404).json({ message: 'No followers' });
+    }
+
+    const followHandles = profile.followers;
+    const followProfiles = await Profile.find({ handle: { $in: followHandles  } });
+
+    res.status(200).json(followProfiles);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+}
+
+async function followingList(req, res) {
+  const { handle } = req.user;
+  try {
+    const profile = await Profile.findOne({ handle });
+    if (!profile || !profile.following || profile.following.length === 0) {
+      return res.status(401).json({ message: 'Not following any profiles' });
+    }
+
+    const followingHandles = profile.following;
+    const followingProfiles = await Profile.find({ handle: { $in: followingHandles } });
+
+    res.status(200).json(followingProfiles);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+}
+
+async function followRequests(req, res) {
+  const { handle } = req.user;
+  try {
+    const userProfile = await Profile.findOne({ handle: req.user.handle });
+    if (!userProfile || !userProfile.followRequests || userProfile.followRequests.length === 0) {
+      return res.status(401).json({ message: 'No follow requests' });
+    }
+
+    const followRequests = await Profile.find({ handle: { $in: userProfile.followRequests } });
+    res.status(200).json(followRequests);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+}
 
 
 export {
@@ -297,5 +362,8 @@ export {
   rejectFriendRequest,
   unfriend,
   follow,
-  unfollow
+  unfollow,
+  followersList,
+  followingList,
+  followRequests
 }

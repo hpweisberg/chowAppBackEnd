@@ -15,6 +15,11 @@ const profileSchema = new Schema({
   bio: String,
   followers: [String],
   following: [String],
+  followRequests: [String],
+  followPublic: {
+    type: Boolean,
+    default: true
+  },
   blocked: [String],
   verified: Boolean,
   posts: [{
