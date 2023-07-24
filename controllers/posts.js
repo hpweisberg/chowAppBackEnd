@@ -77,6 +77,48 @@ async function indexByFriends(req, res) {
   }
 }
 
+async function indexByFollowing(req, res) {
+  const { handle } = req.user;
+  try {
+    const userProfile = await Profile.findOne({ handle });
+
+    if (!userProfile) {
+      return res.status(404).json({ message: 'User profile not found' });
+    }
+
+    const followingHandles = userProfile.following.map((friend) => friend);
+
+    if (followingHandles.length === 0) {
+      return res.status(404).json({ message: 'Not following anyone yet' });
+    }
+
+    const posts = await Post.find({ author: { $in: followingHandles } })
+      .sort({ createdAt: -1 });
+
+    const populatedPosts = await Promise.all(
+      posts.map(async (post) => {
+        const author = await Profile.findOne({ handle: post.author });
+
+        if (!author) {
+          return null;
+        }
+
+        return {
+          ...post.toObject(),
+          author: author.toObject(),
+        };
+      })
+    );
+
+    const filteredPosts = populatedPosts.filter((post) => post !== null);
+
+    res.json(filteredPosts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
+  }
+}
+
 
 
 
@@ -236,5 +278,6 @@ export {
   update,
   deletePost,
   indexByFriends,
+  indexByFollowing
   // addRestaurant
 }

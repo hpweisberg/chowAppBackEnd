@@ -238,7 +238,7 @@ async function unfriend(req, res) {
 
 async function follow(req, res) {
   try {
-  const friendProfile = await Profile.findOne({ handle: req.params.handle });
+    const friendProfile = await Profile.findOne({ handle: req.params.handle });
     const userProfile = await Profile.findOne({ handle: req.user.handle });
 
     if (!friendProfile || !userProfile) {
@@ -249,30 +249,30 @@ async function follow(req, res) {
       return res.status(401).json({ message: 'You cannot send a follow request to yourself' });
     }
 
-    if (friendProfile.followRequests.some(request => request.handle === userProfile.handle)) {
+    if (friendProfile.followRequests.includes(userProfile.handle)) {
       return res.status(401).json({ message: 'You have already sent a follow request' });
     }
-    
+
     if (friendProfile.followPublic === false) {
       friendProfile.followRequests.push(userProfile.handle);
       await friendProfile.save();
-    } 
-
-    if (friendProfile.followPublic === true) {
+    } else {
       userProfile.following.push(friendProfile.handle);
       await userProfile.save();
       friendProfile.followers.push(userProfile.handle);
       await friendProfile.save();
     }
 
-    // friendProfile.friendRequests.push(userProfile.handle);
-    await friendProfile.save();
-    res.status(200).json(friendProfile);
+    return res.status(200).json(friendProfile);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+
+
 
 async function unfollow(req, res) {
   try {
@@ -376,6 +376,11 @@ async function acceptFollowRequest(req, res) {
       return res.status(401).json({ message: 'You have already sent a follow request' });
     }
 
+    if (userProfile.followers.includes(otherProfile.handle)) {
+      return res.status(401).json({ message: 'You are already following this person' });
+    }
+    
+
     otherProfile.following.push(userProfile.handle);
     // otherProfile.followRequests.pull(userProfile.handle);
     await otherProfile.save();
@@ -410,7 +415,7 @@ async function rejectFollowRequest(req, res) {
     userProfile.followRequests.pull(otherProfile.handle);
     await userProfile.save();
 
-    res.status(200).json(userProfile);
+    res.status(200).json(otherProfile);
   } catch (error) {
     res.status(500).json(error);
   }
