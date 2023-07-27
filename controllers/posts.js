@@ -162,19 +162,19 @@ async function create(req, res) {
 async function show(req, res) {
   try {
     const post = await Post.findById(req.params.id);
-    
+
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
+
     const author = await Profile.findOne({ handle: post.author });
-    
+
     if (!author) {
       return res.status(404).json({ message: 'Author not found' });
     }
-    
+
     post.author = author;
-    
+
     res.status(200).json(post);
   } catch (err) {
     console.log(err);
@@ -186,7 +186,13 @@ async function show(req, res) {
 
 async function update(req, res) {
   try {
-    const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    let updatedData = req.body;
+    if (req.files) {
+      const result = await cloudinary.uploader.upload(req.file.path);
+      updatedData.photo = result.secure_url;
+    }
+
+    const post = await Post.findByIdAndUpdate(req.params.id, updatedData, { new: true })
     res.status(200).json(post)
   } catch (err) {
     console.log(err)
@@ -233,30 +239,34 @@ async function addPhoto(req, res) {
   }
 }
 
+async function updatePhoto(req, res) {
+  try {
+    const imageFile = req.files.photo.path;
+    const post = await Post.findById(req.params.id);
 
-// async function addPhoto(req, res) {
-//   try {
-//     // console.log('Add Photo Ran')
-//     // console.log('req.files: ',req.files)
-//     const imageFile = req.files.photo.path
-//     // console.log('imageFile: ',imageFile)
-//     const post = await Post.findById(req.params.id)
-//     // console.log('post: ',post)
+    const image = await cloudinary.uploader.upload(
+      imageFile,
+      {
+        tags: `${post._id}`,
+        transformation: [
+          {
+            width: 600,
+            height: 600,
+            crop: 'fill',
+            gravity: 'center',
+          },
+        ],
+      }
+    );
 
-//     const image = await cloudinary.uploader.upload(
-//       imageFile,
-//       { tags: `${post._id}` }
-//     )
-//     // console.log('image: ',image)
-//     post.photo = image.url
-//     // console.log('post.photo: ',post.photo)
-//     await post.save()
-//     res.status(201).json(post.photo)
-//   } catch (err) {
-//     console.log(err)
-//     res.status(500).json(err)
-//   }
-// }
+    post.photo = image.url;
+    await post.save();
+    res.status(201).json(post.photo);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+}
 
 // async function addRestaurant(req, res) {
 //   try {
@@ -278,6 +288,7 @@ export {
   update,
   deletePost,
   indexByFriends,
-  indexByFollowing
+  indexByFollowing,
+  updatePhoto
   // addRestaurant
 }

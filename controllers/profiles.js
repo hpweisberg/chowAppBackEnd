@@ -27,13 +27,15 @@ const show = async (req, res) => {
   }
 };
 
-
 async function update(req, res) {
   const { handle } = req.user;
 
   try {
     let updatedData = req.body;
-
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path);
+      updatedData.photo = result.secure_url;
+    }
     // Update the user model if the requested key-value pair is present
     if (updatedData.name) {
       const user = await User.findOne({ handle });

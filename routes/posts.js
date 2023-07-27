@@ -18,6 +18,7 @@ router.get('/:id', checkAuth, postsCtrl.show)
 router.put('/:id', checkAuth, postsCtrl.update)
 router.delete('/:id', checkAuth, postsCtrl.deletePost)
 router.put('/:id/add-photo', checkAuth, postsCtrl.addPhoto)
+router.put('/:id/update-photo', checkAuth, postsCtrl.updatePhoto)
 // router.put('/:id/add-restaurant', checkAuth, postsCtrl.addRestaurant)
 // router.post('/change-password', checkAuth, authCtrl.changePassword)
 

@@ -10,6 +10,10 @@ const postSchema = new Schema({
   title: String,
   rating: Number,
   description: String,
+  mustTry: {
+    type: Boolean,
+    default: false,
+  },
   author: { 
     type: String, 
     ref: 'Profile',

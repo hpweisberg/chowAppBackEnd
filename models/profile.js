@@ -26,6 +26,10 @@ const profileSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post'
   }],
+  saved: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post'
+  }],
   restaurants: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant'
