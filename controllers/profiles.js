@@ -48,13 +48,42 @@ async function update(req, res) {
       updatedData,
       { new: true }
     );
-    res.json(profile);
+    res.status(200).json(profile);
   } catch (err) {
     console.log(err);
     res.status(500).json(err);
   }
 }
 
+async function updatePhoto(req, res) {
+  try {
+    const imageFile = req.files.photo.path;
+    const profile = await Profile.findOne({ handle: req.params.handle }); // Update this line
+
+    if (!profile) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+
+    const image = await cloudinary.uploader.upload(imageFile, { 
+      tags: `${req.user.email}`,
+      transformation: [
+        {
+          width: 600,
+          height: 600,
+          crop: 'fill',
+          gravity: 'center',
+        },
+      ],
+    });
+    profile.photo = image.url;
+
+    await profile.save();
+    res.status(201).json(profile.photo);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+}
 
 
 async function addPhoto(req, res) {
@@ -64,7 +93,17 @@ async function addPhoto(req, res) {
 
     const image = await cloudinary.uploader.upload(
       imageFile,
-      { tags: `${req.user.email}` }
+      { 
+        tags: `${req.user.email}`,
+        transformation: [
+          {
+            width: 600,
+            height: 600,
+            crop: 'fill',
+            gravity: 'center',
+          },
+        ],
+      }
     )
     profile.photo = image.url
 
@@ -441,5 +480,6 @@ export {
   followingList,
   followRequests,
   acceptFollowRequest,
-  rejectFollowRequest
+  rejectFollowRequest,
+  updatePhoto
 }
