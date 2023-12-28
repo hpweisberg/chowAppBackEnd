@@ -203,7 +203,7 @@ async function update(req, res) {
 async function deletePost(req, res) {
   try {
     const post = await Post.findByIdAndDelete(req.params.id)
-    res.status(200).json(post)
+    res.status(200).json(post) 
   } catch (err) {
     console.log(err)
     res.status(500).json(err)
@@ -289,6 +289,7 @@ export {
   deletePost,
   indexByFriends,
   indexByFollowing,
-  updatePhoto
+  updatePhoto,
+  // getApiKey
   // addRestaurant
 }

@@ -143,7 +143,17 @@ function handleAuthError(err, res) {
 }
 
 function createJWT(user) {
-  return jwt.sign({ user }, process.env.SECRET, { expiresIn: '24h' })
+  return jwt.sign({ user }, process.env.SECRET, { expiresIn: '72h' })
+}
+
+async function getApiKey(req, res) {
+  try {
+    const apiKey = process.env.GOOGLE_API_KEY
+    res.status(200).json(apiKey)
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(err)
+  }
 }
 
 export {
@@ -152,5 +162,6 @@ export {
   changePassword,
   update,
   isEmailUnique,
-  isHandleUnique
+  isHandleUnique,
+  getApiKey
 }

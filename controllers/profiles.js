@@ -351,33 +351,37 @@ async function unfollow(req, res) {
 }
 
 async function followersList(req, res) {
-  const { handle } = req.user;
+  // const { handle } = req.params.handle;
 
   try {
-    const profile = await Profile.findOne({ handle });
+    const profile = await Profile.findOne({ handle: req.params.handle });
     if (!profile || !profile.followers || profile.followers.length === 0) {
-      return res.status(404).json({ message: 'No followers' });
+      return res.status(401).json({ message: 'Not following any profiles' });
     }
+    console.log('profile: ', profile);
 
-    const followHandles = profile.followers;
-    const followProfiles = await Profile.find({ handle: { $in: followHandles  } });
+    const followerHandles = profile.followers;
+    const followerProfiles = await Profile.find({ handle: { $in: followerHandles } });
+    console.log('followerProfiles: ', followerProfiles);
 
-    res.status(200).json(followProfiles);
+    res.status(200).json(followerProfiles);
   } catch (error) {
     res.status(500).json(error);
   }
 }
 
 async function followingList(req, res) {
-  const { handle } = req.user;
+  // const { handle } = req.user;
   try {
-    const profile = await Profile.findOne({ handle });
+    const profile = await Profile.findOne({ handle: req.params.handle });
     if (!profile || !profile.following || profile.following.length === 0) {
       return res.status(401).json({ message: 'Not following any profiles' });
     }
+    console.log('profile: ', profile);
 
     const followingHandles = profile.following;
     const followingProfiles = await Profile.find({ handle: { $in: followingHandles } });
+    console.log('followingProfiles: ', followingProfiles);
 
     res.status(200).json(followingProfiles);
   } catch (error) {
@@ -386,11 +390,11 @@ async function followingList(req, res) {
 }
 
 async function followRequests(req, res) {
-  const { handle } = req.user;
+  // const { handle } = req.user;
   try {
-    const userProfile = await Profile.findOne({ handle: req.user.handle });
+    const userProfile = await Profile.findOne({ handle: req.params.handle });
     if (!userProfile || !userProfile.followRequests || userProfile.followRequests.length === 0) {
-      return res.status(401).json({ message: 'No follow requests' });
+      return res.status(204).json({ message: 'No follow requests' });
     }
 
     const followRequests = await Profile.find({ handle: { $in: userProfile.followRequests } });

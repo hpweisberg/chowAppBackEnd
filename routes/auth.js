@@ -14,5 +14,6 @@ router.post('/login', authCtrl.login)
 router.use(decodeUserFromToken)
 router.post('/change-password', checkAuth, authCtrl.changePassword)
 router.patch('/update', checkAuth, authCtrl.update)
+router.get('/api-key', checkAuth, authCtrl.getApiKey)
 
 export { router }
